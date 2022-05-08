@@ -1,22 +1,31 @@
-import CSProblem
 import copy
 
+import CSProblem
 
+
+# jupyter
 def solve(n):
     p = backtrack(CSProblem.create())
     CSProblem.present(p)
 
 
 def backtrack(p):
+    # תמצא את התא הבא שכדאי למלא אותו בערך
     var = next_var(p)  #
     if var == None:
         return p
+    # var= next ceil to treatment
     dom = sorted_domain(p, var, LCV=True)  #
+    # lcv= least constrianing value
+    # סדר את הדומיין ככה שהראשון יהיה הכי כדאי לבחור.
     for i in dom:
         bu = copy.deepcopy(p)
         CSProblem.assign_val(bu, var, i)
         propagate_constraints(bu, var)  #
         bu = backtrack(bu)
+        # במצב שבו מילאתי תא
+        # בצורה לא נכונה יווצר מצב בו הדומיין של תא מסויים ריק אבל התא ריק
+        # וזה אומר שהלוח במצב הנוכחי לא יכול להיפתר לכן צריך לחזור אחורה
         if CSProblem.is_solved(bu):
             return bu
     return p
@@ -34,6 +43,7 @@ def sorted_domain(p, var, LCV=True):
     return sd
 
 
+# כמה אני יצטרך למחוק מדומיינים של תאים אחרים אם אני יציב ערך בתא שבחרתי
 def num_of_del_vals(l):
     # l=[problem, the variable, the val. assigned to the var.]
     # returns the num. of vals. erased from vars domains after assigning x to v
@@ -45,7 +55,9 @@ def num_of_del_vals(l):
     return count
 
 
+# מחזיר את המיקום הבא על הלוח שכדאי למלא
 def next_var(p, MRV=True):
+    # minimum reimining value
     # Returns next var. to assign
     # If MRV=True uses MRV heuristics
     # If MRV=False returns first non-assigned ver.
@@ -55,6 +67,8 @@ def next_var(p, MRV=True):
             return None
         else:
             return v[0]
+    # if mrv==true:
+    # find the value whit minimum domain size
     m = float("inf")
     mrv = None
     for i in CSProblem.get_list_of_free_vars(p):
@@ -65,6 +79,7 @@ def next_var(p, MRV=True):
     return mrv
 
 
+# לאחר הצבת ערך אנחנו רוצים להפיץ את האילוצים לכל מי שמושפע על ידינו
 def propagate_constraints(p, v):
     for i in CSProblem.list_of_influenced_vars(p, v):
         for x in CSProblem.domain(p, i):
